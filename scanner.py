@@ -5,6 +5,7 @@ import re
 import requests
 import whois
 import utf
+import urllib3
 
 
 
@@ -35,10 +36,11 @@ def robotstxtAvailable(url):
         if int(robot.status_code) == 200:
             print "-->robots.txt available"
             print "robots.txt:", robot.content
-
+        else:
+            print "->robots.txt isn't available"
     except:
-        print "->robots.txt isn't available"
-        print "robots.txt:", robot.content
+        pass
+
 
 #2nd
 
@@ -100,6 +102,8 @@ def mail(url):
     find7 = re.findall(r'[\w.-]+@[\w.-]+.\w+', mail1.content)
     for i in find7:
         print "-->E-mail: ", str(i)
+
+        
 def credit(url):
     credit1 = requests.get(url, verify=False)
     credit2 = str(credit1).split()
@@ -131,6 +135,7 @@ def credit(url):
 
 if args:
     url = getattr(args, 'web_URL')
+    urllib3.disable_warnings()
 
     print "-->URL:", url, "\n=========="
     if args.action=="sql":

@@ -9,5 +9,5 @@ Scanner has the following features.
 
 Usage:
 python scanner.py action web_url
-  action      Action: xss sql e-mail credit-card whois robots-txt
+  action      Action: xss sql e-mail credit-card whois robots.txt
   web_url     URL
