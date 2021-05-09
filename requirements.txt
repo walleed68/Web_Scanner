@@ -1,4 +1,7 @@
-python-whois
-futures
+argparse
+re
+html
 requests
-lxml
+whois
+utf
+urllib3

